@@ -19,8 +19,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    ../../../Users/Lenovo/Desktop/main.cpp \
-    ../../../Users/Lenovo/Desktop/mytcpserver.cpp
+    main.cpp \
+    mytcpserver.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -28,7 +28,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 HEADERS += \
-    ../../../Users/Lenovo/Desktop/mytcpserver.h
+    mytcpserver.h
 
 DISTFILES += \
     .gitignore
