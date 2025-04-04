@@ -1,0 +1,89 @@
+# Кузнецов Никита Владимирович 241 - 326
+# Объяснение некоторых моментов:
+# 1. 	При установке скачанного с официального сайта qt6.8.0 высвечивалось очень много предупреждений 
+# 	о неправильном locale, поэтому пришлось дополнительно его настраивать - менять на UTF - 8. 
+# 	(Qt использует UTF-8 для работы с текстом. Это стандартная кодировка, которая поддерживает все символы Unicode, включая 
+#	символы разных языков и специальные символы. Если система использует другую кодировку (например, ANSI_X3.4-1968), это 
+#	может привести к проблемам с отображением текста, обработкой строк и взаимодействием с базами данных.)
+# 2.	Мне пришлось использовать cmake вместо qmake (который показан в лекции), потому что я не смог его установить. Стало известно, что
+#	qmake недоступен по умолчанию, так как в Qt 6 основной инструмент сборки — это cmake, а не qmake. Также я узнал, что в Qt 6 qmake 
+#	доступен, но его нужно устанавливать отдельно. Однако даже после многочисленных попыток установить qmake различными способами, 
+#	я так и не добился успеха＞︿＜
+# 3.	Для работы с cmake необходим файл CMakeList, который в данном случае выступает заменой файла .pro. Поэтому пришлось 
+#	создать CMakeList в корневой директории проекта и скопировать его к контейнер - после этого сервер запустился
+
+
+
+
+
+# Используем базовый образ Ubuntu 22.04
+FROM ubuntu:22.04
+
+# Установка необходимых зависимостей
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    libpq-dev \
+    libgl1-mesa-dev \
+    libxkbcommon-x11-dev \
+    libxcb-xinerama0-dev \
+    libfontconfig1-dev \
+    libfreetype6-dev \
+    libx11-dev \
+    libxext-dev \
+    libxfixes-dev \
+    libxi-dev \
+    libxrender-dev \
+    libxcb1-dev \
+    libx11-xcb-dev \
+    libxcb-glx0-dev \
+    libxcb-keysyms1-dev \
+    libxcb-image0-dev \
+    libxcb-shm0-dev \
+    libxcb-icccm4-dev \
+    libxcb-sync0-dev \
+    libxcb-xfixes0-dev \
+    libxcb-shape0-dev \
+    libxcb-randr0-dev \
+    libxcb-render-util0-dev \
+    libxcb-xinerama0-dev \
+    libxkbcommon-dev \
+    libxkbcommon-x11-dev \
+    libssl-dev \
+    libglu1-mesa-dev \
+    python3 \
+    ninja-build \
+    locales \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
+# Настройка локали (UTF-8)
+RUN locale-gen C.UTF-8
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+
+# Загрузка и распаковка Qt 6.8.0
+RUN wget https://download.qt.io/official_releases/qt/6.8/6.8.0/single/qt-everywhere-src-6.8.0.tar.xz && \
+    tar -xf qt-everywhere-src-6.8.0.tar.xz && \
+    rm qt-everywhere-src-6.8.0.tar.xz
+
+# Установка Qt 6.8.0
+RUN cd qt-everywhere-src-6.8.0 && \
+    ./configure -prefix /opt/qt6 -opensource -confirm-license -nomake examples -nomake tests && \
+    cmake --build . --parallel && \
+    cmake --install .
+
+# Добавление Qt в PATH
+ENV PATH="/opt/qt6/bin:${PATH}"
+
+# Копируем проект в контейнер
+COPY . /usr/src/myapp
+WORKDIR /usr/src/myapp
+
+# Сборка проекта
+RUN mkdir build && cd build && \
+    cmake -GNinja -DCMAKE_INSTALL_PREFIX=/usr/local/qt6 .. && \
+    ninja
+
+# Запуск проекта
+CMD ["./build/eho_server"]
