@@ -1,0 +1,25 @@
+#include "LoginWindow.h"
+#include "ui_LoginWindow.h"
+
+LoginWindow::LoginWindow(QWidget *parent) :
+    QWidget(parent),
+    ui(new Ui::LoginWindow)
+{
+    ui->setupUi(this);
+    // Дополнительная инициализация при необходимости
+}
+
+LoginWindow::~LoginWindow()
+{
+    delete ui;
+}
+
+void LoginWindow::on_registerButton_clicked()
+{
+    emit registrationRequested();
+}
+
+void LoginWindow::on_loginButton_clicked()
+{
+    emit loginRequested();
+}
