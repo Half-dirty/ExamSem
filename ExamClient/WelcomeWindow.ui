@@ -17,7 +17,7 @@
    <property name="geometry">
     <rect>
      <x>295</x>
-     <y>300</y>
+     <y>270</y>
      <width>210</width>
      <height>50</height>
     </rect>
@@ -36,7 +36,7 @@
    <property name="geometry">
     <rect>
      <x>295</x>
-     <y>370</y>
+     <y>340</y>
      <width>210</width>
      <height>50</height>
     </rect>
@@ -51,11 +51,11 @@
     <string>Посмотреть статистику</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="exitButton">
+  <widget class="QPushButton" name="profileButton">
    <property name="geometry">
     <rect>
      <x>295</x>
-     <y>440</y>
+     <y>410</y>
      <width>210</width>
      <height>50</height>
     </rect>
@@ -67,7 +67,7 @@
     </font>
    </property>
    <property name="text">
-    <string>Выйти</string>
+    <string>Личный кабинет</string>
    </property>
   </widget>
   <widget class="QLabel" name="label">
@@ -125,6 +125,25 @@
    </property>
    <property name="text">
     <string>- программу для прохождения экзаменов</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="exitButton">
+   <property name="geometry">
+    <rect>
+     <x>295</x>
+     <y>480</y>
+     <width>210</width>
+     <height>50</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Times New Roman</family>
+     <pointsize>14</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>Выйти</string>
    </property>
   </widget>
  </widget>

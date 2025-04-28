@@ -42,9 +42,11 @@ static constexpr auto qt_meta_stringdata_ZN13WelcomeWindowE = QtMocHelpers::stri
     "",
     "viewStatisticsRequested",
     "exitRequested",
+    "profileRequested",
     "on_startExamButton_clicked",
     "on_viewStatisticsButton_clicked",
-    "on_exitButton_clicked"
+    "on_exitButton_clicked",
+    "on_profileButton_clicked"
 );
 #else  // !QT_MOC_HAS_STRINGDATA
 #error "qtmochelpers.h not found or too old."
@@ -56,29 +58,33 @@ Q_CONSTINIT static const uint qt_meta_data_ZN13WelcomeWindowE[] = {
       12,       // revision
        0,       // classname
        0,    0, // classinfo
-       6,   14, // methods
+       8,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
        0,       // flags
-       3,       // signalCount
+       4,       // signalCount
 
  // signals: name, argc, parameters, tag, flags, initial metatype offsets
-       1,    0,   50,    2, 0x06,    1 /* Public */,
-       3,    0,   51,    2, 0x06,    2 /* Public */,
-       4,    0,   52,    2, 0x06,    3 /* Public */,
+       1,    0,   62,    2, 0x06,    1 /* Public */,
+       3,    0,   63,    2, 0x06,    2 /* Public */,
+       4,    0,   64,    2, 0x06,    3 /* Public */,
+       5,    0,   65,    2, 0x06,    4 /* Public */,
 
  // slots: name, argc, parameters, tag, flags, initial metatype offsets
-       5,    0,   53,    2, 0x08,    4 /* Private */,
-       6,    0,   54,    2, 0x08,    5 /* Private */,
-       7,    0,   55,    2, 0x08,    6 /* Private */,
+       6,    0,   66,    2, 0x08,    5 /* Private */,
+       7,    0,   67,    2, 0x08,    6 /* Private */,
+       8,    0,   68,    2, 0x08,    7 /* Private */,
+       9,    0,   69,    2, 0x08,    8 /* Private */,
 
  // signals: parameters
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
+    QMetaType::Void,
 
  // slots: parameters
+    QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
@@ -101,11 +107,15 @@ Q_CONSTINIT const QMetaObject WelcomeWindow::staticMetaObject = { {
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
         // method 'exitRequested'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        // method 'profileRequested'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
         // method 'on_startExamButton_clicked'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
         // method 'on_viewStatisticsButton_clicked'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
         // method 'on_exitButton_clicked'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        // method 'on_profileButton_clicked'
         QtPrivate::TypeAndForceComplete<void, std::false_type>
     >,
     nullptr
@@ -119,9 +129,11 @@ void WelcomeWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _i
         case 0: _t->startExamRequested(); break;
         case 1: _t->viewStatisticsRequested(); break;
         case 2: _t->exitRequested(); break;
-        case 3: _t->on_startExamButton_clicked(); break;
-        case 4: _t->on_viewStatisticsButton_clicked(); break;
-        case 5: _t->on_exitButton_clicked(); break;
+        case 3: _t->profileRequested(); break;
+        case 4: _t->on_startExamButton_clicked(); break;
+        case 5: _t->on_viewStatisticsButton_clicked(); break;
+        case 6: _t->on_exitButton_clicked(); break;
+        case 7: _t->on_profileButton_clicked(); break;
         default: ;
         }
     }
@@ -148,6 +160,13 @@ void WelcomeWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _i
                 return;
             }
         }
+        {
+            using _q_method_type = void (WelcomeWindow::*)();
+            if (_q_method_type _q_method = &WelcomeWindow::profileRequested; *reinterpret_cast<_q_method_type *>(_a[1]) == _q_method) {
+                *result = 3;
+                return;
+            }
+        }
     }
 }
 
@@ -170,14 +189,14 @@ int WelcomeWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 6)
+        if (_id < 8)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 6;
+        _id -= 8;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 6)
+        if (_id < 8)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 6;
+        _id -= 8;
     }
     return _id;
 }
@@ -198,5 +217,11 @@ void WelcomeWindow::viewStatisticsRequested()
 void WelcomeWindow::exitRequested()
 {
     QMetaObject::activate(this, &staticMetaObject, 2, nullptr);
+}
+
+// SIGNAL 3
+void WelcomeWindow::profileRequested()
+{
+    QMetaObject::activate(this, &staticMetaObject, 3, nullptr);
 }
 QT_WARNING_POP

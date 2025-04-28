@@ -58,6 +58,8 @@ static constexpr auto qt_meta_stringdata_ZN6ClientE = QtMocHelpers::stringData(
     "score",
     "QList<int>",
     "userAnswers",
+    "profileReceived",
+    "profile",
     "onReadyRead"
 );
 #else  // !QT_MOC_HAS_STRINGDATA
@@ -70,26 +72,27 @@ Q_CONSTINIT static const uint qt_meta_data_ZN6ClientE[] = {
       12,       // revision
        0,       // classname
        0,    0, // classinfo
-      10,   14, // methods
+      11,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
        0,       // flags
-       9,       // signalCount
+      10,       // signalCount
 
  // signals: name, argc, parameters, tag, flags, initial metatype offsets
-       1,    1,   74,    2, 0x06,    1 /* Public */,
-       5,    1,   77,    2, 0x06,    3 /* Public */,
-       7,    1,   80,    2, 0x06,    5 /* Public */,
-       9,    1,   83,    2, 0x06,    7 /* Public */,
-      11,    0,   86,    2, 0x06,    9 /* Public */,
-      12,    1,   87,    2, 0x06,   10 /* Public */,
-      13,    0,   90,    2, 0x06,   12 /* Public */,
-      14,    1,   91,    2, 0x06,   13 /* Public */,
-      16,    3,   94,    2, 0x06,   15 /* Public */,
+       1,    1,   80,    2, 0x06,    1 /* Public */,
+       5,    1,   83,    2, 0x06,    3 /* Public */,
+       7,    1,   86,    2, 0x06,    5 /* Public */,
+       9,    1,   89,    2, 0x06,    7 /* Public */,
+      11,    0,   92,    2, 0x06,    9 /* Public */,
+      12,    1,   93,    2, 0x06,   10 /* Public */,
+      13,    0,   96,    2, 0x06,   12 /* Public */,
+      14,    1,   97,    2, 0x06,   13 /* Public */,
+      16,    3,  100,    2, 0x06,   15 /* Public */,
+      20,    1,  107,    2, 0x06,   19 /* Public */,
 
  // slots: name, argc, parameters, tag, flags, initial metatype offsets
-      20,    0,  101,    2, 0x08,   19 /* Private */,
+      22,    0,  110,    2, 0x08,   21 /* Private */,
 
  // signals: parameters
     QMetaType::Void, 0x80000000 | 3,    4,
@@ -101,6 +104,7 @@ Q_CONSTINIT static const uint qt_meta_data_ZN6ClientE[] = {
     QMetaType::Void,
     QMetaType::Void, QMetaType::QJsonArray,   15,
     QMetaType::Void, QMetaType::Int, 0x80000000 | 3, 0x80000000 | 18,   17,    4,   19,
+    QMetaType::Void, QMetaType::QJsonObject,   21,
 
  // slots: parameters
     QMetaType::Void,
@@ -144,6 +148,9 @@ Q_CONSTINIT const QMetaObject Client::staticMetaObject = { {
         QtPrivate::TypeAndForceComplete<int, std::false_type>,
         QtPrivate::TypeAndForceComplete<const QVector<ExamQuestion> &, std::false_type>,
         QtPrivate::TypeAndForceComplete<const QVector<int> &, std::false_type>,
+        // method 'profileReceived'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const QJsonObject &, std::false_type>,
         // method 'onReadyRead'
         QtPrivate::TypeAndForceComplete<void, std::false_type>
     >,
@@ -164,7 +171,8 @@ void Client::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void
         case 6: _t->registrationSuccess(); break;
         case 7: _t->statisticsReceived((*reinterpret_cast< std::add_pointer_t<QJsonArray>>(_a[1]))); break;
         case 8: _t->examFinished((*reinterpret_cast< std::add_pointer_t<int>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QList<ExamQuestion>>>(_a[2])),(*reinterpret_cast< std::add_pointer_t<QList<int>>>(_a[3]))); break;
-        case 9: _t->onReadyRead(); break;
+        case 9: _t->profileReceived((*reinterpret_cast< std::add_pointer_t<QJsonObject>>(_a[1]))); break;
+        case 10: _t->onReadyRead(); break;
         default: ;
         }
     }
@@ -245,6 +253,13 @@ void Client::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void
                 return;
             }
         }
+        {
+            using _q_method_type = void (Client::*)(const QJsonObject & );
+            if (_q_method_type _q_method = &Client::profileReceived; *reinterpret_cast<_q_method_type *>(_a[1]) == _q_method) {
+                *result = 9;
+                return;
+            }
+        }
     }
 }
 
@@ -267,14 +282,14 @@ int Client::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 10)
+        if (_id < 11)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 10;
+        _id -= 11;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 10)
+        if (_id < 11)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 10;
+        _id -= 11;
     }
     return _id;
 }
@@ -338,5 +353,12 @@ void Client::examFinished(int _t1, const QVector<ExamQuestion> & _t2, const QVec
 {
     void *_a[] = { nullptr, const_cast<void*>(reinterpret_cast<const void*>(std::addressof(_t1))), const_cast<void*>(reinterpret_cast<const void*>(std::addressof(_t2))), const_cast<void*>(reinterpret_cast<const void*>(std::addressof(_t3))) };
     QMetaObject::activate(this, &staticMetaObject, 8, _a);
+}
+
+// SIGNAL 9
+void Client::profileReceived(const QJsonObject & _t1)
+{
+    void *_a[] = { nullptr, const_cast<void*>(reinterpret_cast<const void*>(std::addressof(_t1))) };
+    QMetaObject::activate(this, &staticMetaObject, 9, _a);
 }
 QT_WARNING_POP

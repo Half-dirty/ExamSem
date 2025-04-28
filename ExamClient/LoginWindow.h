@@ -20,8 +20,6 @@ signals:
     void loginRequested();
 
 private slots:
-    // Эти слоты будут вызваны автоматически при нажатии кнопок,
-    // если их objectName в ui-файле совпадает с суффиксом (например, registerButton, loginButton)
     void on_registerButton_clicked();
     void on_loginButton_clicked();
 
@@ -29,4 +27,4 @@ private:
     Ui::LoginWindow *ui;
 };
 
-#endif // LOGINWINDOW_H
+#endif

@@ -7,8 +7,7 @@
 struct ExamQuestion {
     QString questionText;
     QStringList options;
-    // Храним правильный ответ как текст
     QString correctAnswerText;
 };
 
-#endif // EXAMQUESTION_H
+#endif

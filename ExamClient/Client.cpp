@@ -8,7 +8,7 @@ Client* Client::instance = nullptr;
 Client* Client::getInstance()
 {
     if (!instance) {
-        instance = new Client(nullptr); // Родитель можно задать по необходимости
+        instance = new Client(nullptr);
     }
     return instance;
 }
@@ -16,7 +16,6 @@ Client* Client::getInstance()
 Client::Client(QObject *parent) : QObject(parent)
 {
     socket = new QTcpSocket(this);
-    // Подключаемся к серверу (укажите адрес и порт по необходимости)
     socket->connectToHost("localhost", 33333);
     if (socket->waitForConnected(3000)) {
         qDebug() << "Подключение к серверу установлено.";
@@ -95,11 +94,9 @@ void Client::onReadyRead()
             return;
 
         QJsonObject firstObj = arr.first().toObject();
-        // Если объект содержит ключ "id", считаем, что это список экзаменов
         if (firstObj.contains("id")) {
             emit examListReceived(arr);
         }
-        // Если объект содержит ключ "text", считаем, что это список вопросов
         else if (firstObj.contains("text")) {
             QVector<ExamQuestion> questions;
             for (const QJsonValue &val : arr) {
@@ -107,15 +104,10 @@ void Client::onReadyRead()
                 ExamQuestion q;
                 q.questionText = obj["text"].toString();
 
-                // Парсим варианты ответов
                 QJsonArray optionsArray = obj["options"].toArray();
                 for (const QJsonValue &opt : optionsArray) {
                     q.options.append(opt.toString());
                 }
-
-                // Разбор правильного ответа.
-                // Если correct_answers приходит как вложенный массив (например, [["4"]]),
-                // то извлекаем первую строку из внутреннего массива.
                 QJsonArray outer = obj["correct_answers"].toArray();
                 if (!outer.isEmpty()) {
                     QJsonValue inner = outer.at(0);
@@ -132,17 +124,18 @@ void Client::onReadyRead()
             }
             emit examQuestionsReceived(questions);
         }
-        // Если объект содержит "exam_id", считаем, что это статистика (результаты экзамена)
         else if (firstObj.contains("exam_id")) {
-            // Предполагается, что вы объявили сигнал statisticsReceived(const QJsonArray &stats)
             emit statisticsReceived(arr);
         }
     }
-    // Если получен JSON-объект, можно обработать его по необходимости
     else if (doc.isObject()) {
         QJsonObject obj = doc.object();
-        if (obj.contains("score"))
+        if (obj.contains("full_name") && obj.contains("birth_date") && obj.contains("email")) {
+            emit profileReceived(obj);
+        }
+        else if (obj.contains("score")) {
             emit examResultReceived(obj);
+        }
         else
             qDebug() << "Получен JSON-объект:" << obj;
     }
@@ -163,11 +156,35 @@ void Client::saveExamResults(int examId, int score, const QVector<ExamQuestion> 
     }
     obj["answers"] = arr;
 
-    // Можете, если нужно, добавить логику про questions
-    // ...
-
     QJsonDocument doc(obj);
     QString command = "SAVE_RESULTS " + QString(doc.toJson(QJsonDocument::Compact));
+    socket->write(command.toUtf8());
+    socket->flush();
+}
+
+void Client::requestProfile()
+{
+    QString request = "GET_PROFILE";
+    socket->write(request.toUtf8());
+    socket->flush();
+}
+
+void Client::updateProfile(const QJsonObject &profile)
+{
+    QJsonDocument doc(profile);
+    QString command = "UPDATE_PROFILE " + QString(doc.toJson(QJsonDocument::Compact));
+    socket->write(command.toUtf8());
+    socket->flush();
+}
+
+void Client::changePassword(const QString &oldPassword, const QString &newPassword)
+{
+    QJsonObject obj;
+    obj["old_password"] = oldPassword;
+    obj["new_password"] = newPassword;
+    QJsonDocument doc(obj);
+
+    QString command = "CHANGE_PASSWORD " + QString(doc.toJson(QJsonDocument::Compact));
     socket->write(command.toUtf8());
     socket->flush();
 }

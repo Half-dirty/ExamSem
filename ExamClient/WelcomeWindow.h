@@ -16,19 +16,19 @@ public:
     ~WelcomeWindow();
 
 signals:
-    // Сигналы для перехода на соответствующие экраны
     void startExamRequested();
     void viewStatisticsRequested();
     void exitRequested();
+    void profileRequested();
 
 private slots:
-    // Слоты, которые автоматически вызываются при клике на кнопки
     void on_startExamButton_clicked();
     void on_viewStatisticsButton_clicked();
     void on_exitButton_clicked();
+    void on_profileButton_clicked();
 
 private:
     Ui::WelcomeWindow *ui;
 };
 
-#endif // WELCOMEWINDOW_H
+#endif

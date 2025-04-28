@@ -16,28 +16,26 @@ public:
     explicit RegistrationWindow(QWidget *parent = nullptr);
     ~RegistrationWindow();
 
-    // Устанавливаем клиент для работы с сервером
     void setClient(Client *client);
 
 signals:
-    // Сигнал, когда регистрация прошла успешно (можно использовать для перехода к окну аутентификации)
     void registrationSucceeded();
-    // Сигнал для возврата на предыдущее окно
     void backRequested();
 
 private slots:
-    // Нажатие кнопки «Зарегистрироваться»
     void on_registerButton_clicked();
-    // Нажатие кнопки «Назад»
     void on_backButton_clicked();
-
-    // Обработка ответа сервера для регистрации
     void handleRegistrationError(const QString &errorMessage);
     void handleRegistrationSuccess();
+    void handleLoginSuccess();
 
 private:
     Ui::RegistrationWindow *ui;
     Client *m_client;
+    QString m_lastUsername;
+    QString m_lastPassword;
+    bool m_waitingForLoginAfterRegistration = false;
 };
 
-#endif // REGISTRATIONWINDOW_H
+#endif
+

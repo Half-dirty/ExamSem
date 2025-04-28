@@ -55,6 +55,7 @@ public:
         passwordEdit = new QLineEdit(AuthenticationWindow);
         passwordEdit->setObjectName("passwordEdit");
         passwordEdit->setGeometry(QRect(370, 430, 280, 30));
+        passwordEdit->setEchoMode(QLineEdit::EchoMode::Password);
         label = new QLabel(AuthenticationWindow);
         label->setObjectName("label");
         label->setGeometry(QRect(180, 380, 211, 31));
@@ -99,6 +100,8 @@ public:
         AuthenticationWindow->setWindowTitle(QCoreApplication::translate("AuthenticationWindow", "Form", nullptr));
         backButton->setText(QCoreApplication::translate("AuthenticationWindow", "\320\235\320\260\320\267\320\260\320\264", nullptr));
         nextButton->setText(QCoreApplication::translate("AuthenticationWindow", "\320\222\321\205\320\276\320\264", nullptr));
+        usernameEdit->setPlaceholderText(QCoreApplication::translate("AuthenticationWindow", "\320\222\320\260\321\210\320\265 \320\270\320\274\321\217", nullptr));
+        passwordEdit->setPlaceholderText(QCoreApplication::translate("AuthenticationWindow", "\320\222\320\260\321\210 \320\277\320\260\321\200\320\276\320\273\321\214", nullptr));
         label->setText(QCoreApplication::translate("AuthenticationWindow", "\320\222\320\262\320\265\320\264\320\270\321\202\320\265 \321\201\320\262\320\276\320\265 \320\270\320\274\321\217", nullptr));
         label_2->setText(QCoreApplication::translate("AuthenticationWindow", "\320\222\320\262\320\265\320\264\320\270\321\202\320\265 \320\277\320\260\321\200\320\276\320\273\321\214", nullptr));
         label_3->setText(QCoreApplication::translate("AuthenticationWindow", "\320\220\320\262\321\202\320\276\321\200\320\270\320\267\320\260\321\206\320\270\321\217", nullptr));

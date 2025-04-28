@@ -6,7 +6,6 @@ WelcomeWindow::WelcomeWindow(QWidget *parent) :
     ui(new Ui::WelcomeWindow)
 {
     ui->setupUi(this);
-    // Дополнительная инициализация, если потребуется
 }
 
 WelcomeWindow::~WelcomeWindow()
@@ -27,4 +26,9 @@ void WelcomeWindow::on_viewStatisticsButton_clicked()
 void WelcomeWindow::on_exitButton_clicked()
 {
     emit exitRequested();
+}
+
+void WelcomeWindow::on_profileButton_clicked()
+{
+    emit profileRequested();
 }

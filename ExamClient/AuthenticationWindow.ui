@@ -66,6 +66,9 @@
      <height>30</height>
     </rect>
    </property>
+   <property name="placeholderText">
+    <string>Ваше имя</string>
+   </property>
   </widget>
   <widget class="QLineEdit" name="passwordEdit">
    <property name="geometry">
@@ -75,6 +78,12 @@
      <width>280</width>
      <height>30</height>
     </rect>
+   </property>
+   <property name="echoMode">
+    <enum>QLineEdit::EchoMode::Password</enum>
+   </property>
+   <property name="placeholderText">
+    <string>Ваш пароль</string>
    </property>
   </widget>
   <widget class="QLabel" name="label">
