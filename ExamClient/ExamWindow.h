@@ -4,7 +4,7 @@
 #include <QWidget>
 #include <QVector>
 #include <QJsonArray>
-#include "ExamQuestion.h" // Структура ExamQuestion { QString questionText; QStringList options; int correctAnswerIndex; ... }
+#include "ExamQuestion.h"
 
 namespace Ui {
 class ExamWindow;
@@ -18,7 +18,6 @@ public:
     explicit ExamWindow(QWidget *parent = nullptr);
     ~ExamWindow();
 
-    // Устанавливаем список вопросов
     void setExamQuestions(int examId, const QVector<ExamQuestion> &questions);
 
 signals:
@@ -28,29 +27,20 @@ signals:
                       const QVector<QString> &userAnswers);
 
 private slots:
-    // Слот, вызываемый при нажатии кнопки (PushButton)
     void on_pushButton_clicked();
 
 private:
     Ui::ExamWindow *ui;
-
-    // Список вопросов
     QVector<ExamQuestion> m_questions;
-
-    // Индекс текущего вопроса
     int m_currentIndex;
 
-    // Набранные баллы
     int m_score;
 
-    // Ответы пользователя (индексы выбранных вариантов)
     QVector<int> m_userAnswers;
-
-    // Отображаем текущий вопрос
     void displayCurrentQuestion();
 
     int m_examId = -1;
 
 };
 
-#endif // EXAMWINDOW_H
+#endif

@@ -21,12 +21,9 @@ void ExamWindow::setExamQuestions(int examId, const QVector<ExamQuestion> &quest
 {
     qDebug() << "Received" << questions.size() << "questions.";
 
-    m_examId = examId;  // храним в ExamWindow
-    // Если размер вопросов превышает разумный предел (например, 1000 вопросов),
-    // считаем, что данные некорректны, и выходим, чтобы не пытаться выделять огромный вектор.
+    m_examId = examId;
     const int maxReasonableQuestions = 1000;
     if (questions.size() > maxReasonableQuestions) {
-        qDebug() << "Abnormally high number of questions received:" << questions.size();
         ui->TextLabel->setText("Ошибка: получено слишком много вопросов.");
         ui->pushButton->setEnabled(false);
         return;
@@ -54,13 +51,10 @@ void ExamWindow::displayCurrentQuestion()
         return;
     }
 
-    // Берём текущий вопрос
     const ExamQuestion &q = m_questions[m_currentIndex];
 
-    // Выводим текст вопроса в TextLabel
     ui->TextLabel->setText(q.questionText);
 
-    // Список RadioButton
     QList<QRadioButton*> radios = {
         ui->radioButton,
         ui->radioButton_2,
@@ -68,7 +62,6 @@ void ExamWindow::displayCurrentQuestion()
         ui->radioButton_4
     };
 
-    // Сбрасываем выбор и показываем все кнопки
     for (QRadioButton *rb : radios) {
         rb->setAutoExclusive(false);
         rb->setChecked(false);
@@ -76,13 +69,11 @@ void ExamWindow::displayCurrentQuestion()
         rb->show();
     }
 
-    // Устанавливаем текст вариантов
     for (int i = 0; i < radios.size(); ++i) {
         if (i < q.options.size()) {
             radios[i]->setText(q.options[i]);
             radios[i]->show();
         } else {
-            // Если вариантов меньше 4, скрываем оставшиеся
             radios[i]->hide();
         }
     }
@@ -114,10 +105,8 @@ void ExamWindow::on_pushButton_clicked()
         return;
     }
 
-    // Сохраняем выбранный ответ
     m_userAnswers[m_currentIndex] = selectedIndex;
 
-    // Проверяем правильность – сравниваем текст выбранного варианта с correctAnswerText
     const ExamQuestion &currentQuestion = m_questions[m_currentIndex];
     QString selectedAnswer = currentQuestion.options.at(selectedIndex);
     if (selectedAnswer == currentQuestion.correctAnswerText) {
@@ -129,17 +118,17 @@ void ExamWindow::on_pushButton_clicked()
         displayCurrentQuestion();
     } else {
         ui->pushButton->setEnabled(false);
+
         QVector<QString> userAnswersText;
         for (int i = 0; i < m_questions.size(); ++i) {
-            int idx = m_userAnswers[i];  // индекс ответа
+            int idx = m_userAnswers[i];
             if (idx >= 0 && idx < m_questions[i].options.size()) {
                 userAnswersText.append(m_questions[i].options[idx]);
             } else {
                 userAnswersText.append("Не выбран");
             }
         }
-
         emit examFinished(m_examId, m_score, m_questions, userAnswersText);
-
     }
 }
+

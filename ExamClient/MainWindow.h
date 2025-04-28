@@ -3,8 +3,7 @@
 
 #include <QMainWindow>
 #include <QVector>
-#include "ExamQuestion.h" // Определяет struct ExamQuestion
-// Предварительные объявления
+#include "ExamQuestion.h"
 class LoginWindow;
 class AuthenticationWindow;
 class RegistrationWindow;
@@ -14,6 +13,8 @@ class ExamWindow;
 class ExamCompletionWindow;
 class StatisticsWindow;
 class Client;
+class ChangePasswordWindow;
+class ProfileWindow;
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -36,8 +37,9 @@ private slots:
     void showExamWindow(int examId);
     void showExamCompletion();
     void showStatistics();
+    void showProfile();
+    void showChangePasswordWindow();
 
-    // Слот, который ловит сигнал examFinished(...) из ExamWindow
     void onExamFinished(int examId,
                         int score,
                         const QVector<ExamQuestion> &questions,
@@ -55,12 +57,13 @@ private:
     ExamWindow           *examWindow;
     ExamCompletionWindow *examCompletionWindow;
     StatisticsWindow     *statisticsWindow;
+    ProfileWindow        *profileWindow;
+    ChangePasswordWindow *changePasswordWindow;
 
-    // Клиент
+
     Client *client;
 
-    // Храним выбранный ID экзамена
     int currentExamId = -1;
 };
 
-#endif // MAINWINDOW_H
+#endif

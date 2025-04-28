@@ -60,6 +60,7 @@ public:
         passwordEdit = new QLineEdit(RegistrationWindow);
         passwordEdit->setObjectName("passwordEdit");
         passwordEdit->setGeometry(QRect(370, 430, 280, 30));
+        passwordEdit->setEchoMode(QLineEdit::EchoMode::Password);
         label_2 = new QLabel(RegistrationWindow);
         label_2->setObjectName("label_2");
         label_2->setGeometry(QRect(180, 430, 211, 31));
@@ -88,6 +89,8 @@ public:
         backButton->setText(QCoreApplication::translate("RegistrationWindow", "\320\235\320\260\320\267\320\260\320\264", nullptr));
         registerButton->setText(QCoreApplication::translate("RegistrationWindow", "\320\240\320\265\320\263\320\270\321\201\321\202\321\200\320\260\321\206\320\270\321\217", nullptr));
         label->setText(QCoreApplication::translate("RegistrationWindow", "\320\240\320\265\320\263\320\270\321\201\321\202\320\260\321\206\320\270\321\217", nullptr));
+        usernameEdit->setPlaceholderText(QCoreApplication::translate("RegistrationWindow", "\320\222\320\260\321\210\320\265 \320\270\320\274\321\217", nullptr));
+        passwordEdit->setPlaceholderText(QCoreApplication::translate("RegistrationWindow", "\320\237\321\200\320\270\320\264\321\203\320\274\320\260\320\271\321\202\320\265 \320\277\320\260\321\200\320\276\320\273\321\214", nullptr));
         label_2->setText(QCoreApplication::translate("RegistrationWindow", "\320\222\320\262\320\265\320\264\320\270\321\202\320\265 \320\277\320\260\321\200\320\276\320\273\321\214", nullptr));
         label_3->setText(QCoreApplication::translate("RegistrationWindow", "\320\222\320\262\320\265\320\264\320\270\321\202\320\265 \321\201\320\262\320\276\320\265 \320\270\320\274\321\217", nullptr));
         label_4->setText(QCoreApplication::translate("RegistrationWindow", "\320\224\320\273\321\217 \320\275\320\276\320\262\321\213\321\205 \320\277\320\276\320\273\321\214\320\267\320\276\320\262\320\260\321\202\320\265\320\273\320\265\320\271", nullptr));

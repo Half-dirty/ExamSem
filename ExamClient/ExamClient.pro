@@ -6,12 +6,14 @@ TEMPLATE = app
 
 SOURCES += \
            AuthenticationWindow.cpp \
+           ChangePasswordWindow.cpp \
            Client.cpp \
            ExamCompletionWindow.cpp \
            ExamSelectionWindow.cpp \
            ExamWindow.cpp \
            LoginWindow.cpp \
            MainWindow.cpp \
+           ProfileWindow.cpp \
            RegistrationWindow.cpp \
            StatisticsWindow.cpp \
            WelcomeWindow.cpp \
@@ -19,6 +21,7 @@ SOURCES += \
 
 HEADERS  += \
             AuthenticationWindow.h \
+            ChangePasswordWindow.h \
             Client.h \
             ExamCompletionWindow.h \
             ExamQuestion.h \
@@ -26,20 +29,23 @@ HEADERS  += \
             ExamWindow.h \
             LoginWindow.h \
             MainWindow.h \
+            ProfileWindow.h \
             RegistrationWindow.h \
             StatisticsWindow.h \
             WelcomeWindow.h
 
 FORMS    += \
-    AuthenticationWindow.ui \
+            AuthenticationWindow.ui \
+            ChangePasswordWindow.ui \
             ExamCompletionWindow.ui \
-    ExamSelectionWindow.ui \
-    ExamWindow.ui \
-    LoginWindow.ui \
-    MainWindow.ui \
-    RegistrationWindow.ui \
-    StatisticsWindow.ui \
-    WelcomeWindow.ui
+            ExamSelectionWindow.ui \
+            ExamWindow.ui \
+            LoginWindow.ui \
+            MainWindow.ui \
+            ProfileWindow.ui \
+            RegistrationWindow.ui \
+            StatisticsWindow.ui \
+            WelcomeWindow.ui
 
 RESOURCES += \
-    resources.qrc
+            resources.qrc

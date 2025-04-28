@@ -17,20 +17,19 @@ public:
     explicit ExamCompletionWindow(QWidget *parent = nullptr);
     ~ExamCompletionWindow();
 
-    // Метод для приёма данных об экзамене
     void setResultData(int score,
                        const QVector<ExamQuestion> &questions,
                        const QVector<QString> &userAnswers);
 
 signals:
-    // Сигнал, если нужно вернуться в меню
+
     void exitToMenuRequested();
 
 private slots:
-    void on_exitButton_clicked(); // например, если есть кнопка "В меню"
+    void on_exitButton_clicked();
 
 private:
     Ui::ExamCompletionWindow *ui;
 };
 
-#endif // EXAMCOMPLETIONWINDOW_H
+#endif

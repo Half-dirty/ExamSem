@@ -1,7 +1,7 @@
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
 
-// Подключаем заголовки всех окон и клиента
+// Все окна
 #include "LoginWindow.h"
 #include "AuthenticationWindow.h"
 #include "RegistrationWindow.h"
@@ -11,6 +11,8 @@
 #include "ExamCompletionWindow.h"
 #include "StatisticsWindow.h"
 #include "Client.h"
+#include "ProfileWindow.h"
+#include "ChangePasswordWindow.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -18,11 +20,8 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    // Создаём объект клиента
     client = Client::getInstance();
 
-
-    // Создаём окна
     loginWindow          = new LoginWindow(this);
     authenticationWindow = new AuthenticationWindow(this);
     registrationWindow   = new RegistrationWindow(this);
@@ -31,12 +30,14 @@ MainWindow::MainWindow(QWidget *parent)
     examWindow           = new ExamWindow(this);
     examCompletionWindow = new ExamCompletionWindow(this);
     statisticsWindow     = new StatisticsWindow(this);
+    profileWindow        = new ProfileWindow(this);
+    changePasswordWindow = new ChangePasswordWindow(this);
 
-    // Передаём клиент, если нужно
     authenticationWindow->setClient(client);
     registrationWindow->setClient(client);
+    profileWindow->setClient(client);
+    changePasswordWindow->setClient(client);
 
-    // Добавляем окна в QStackedWidget (objectName="stackedWidget" в MainWindow.ui)
     ui->stackedWidget->addWidget(loginWindow);
     ui->stackedWidget->addWidget(authenticationWindow);
     ui->stackedWidget->addWidget(registrationWindow);
@@ -45,45 +46,37 @@ MainWindow::MainWindow(QWidget *parent)
     ui->stackedWidget->addWidget(examWindow);
     ui->stackedWidget->addWidget(examCompletionWindow);
     ui->stackedWidget->addWidget(statisticsWindow);
+    ui->stackedWidget->addWidget(profileWindow);
+    ui->stackedWidget->addWidget(changePasswordWindow);
 
-    // Подключаем сигналы от loginWindow
+
     connect(loginWindow, &LoginWindow::registrationRequested, this, &MainWindow::showRegistration);
     connect(loginWindow, &LoginWindow::loginRequested,        this, &MainWindow::showAuthentication);
 
-    // Подключаем сигналы от authenticationWindow
-    connect(authenticationWindow, &AuthenticationWindow::backRequested,          this, &MainWindow::showLogin);
-    connect(authenticationWindow, &AuthenticationWindow::authenticationSucceeded,this, &MainWindow::showWelcome);
+    connect(authenticationWindow, &AuthenticationWindow::authenticationSucceeded,  this, &MainWindow::showWelcome);
+    connect(authenticationWindow, &AuthenticationWindow::backRequested,            this, &MainWindow::showLogin);
 
-    // Подключаем сигналы от registrationWindow
+    connect(registrationWindow, &RegistrationWindow::registrationSucceeded, this, &MainWindow::showWelcome);
     connect(registrationWindow, &RegistrationWindow::backRequested,         this, &MainWindow::showLogin);
-    connect(registrationWindow, &RegistrationWindow::registrationSucceeded, this, &MainWindow::showLogin);
 
-    // Подключаем сигналы от welcomeWindow
-    connect(welcomeWindow, &WelcomeWindow::startExamRequested,       this, &MainWindow::showExamSelection);
-    connect(welcomeWindow, &WelcomeWindow::viewStatisticsRequested,  this, &MainWindow::showStatistics);
-    connect(welcomeWindow, &WelcomeWindow::exitRequested,            this, &MainWindow::close);
+    connect(welcomeWindow, &WelcomeWindow::startExamRequested,      this, &MainWindow::showExamSelection);
+    connect(welcomeWindow, &WelcomeWindow::viewStatisticsRequested, this, &MainWindow::showStatistics);
+    connect(welcomeWindow, &WelcomeWindow::exitRequested,           this, &MainWindow::close);
+    connect(welcomeWindow, &WelcomeWindow::profileRequested,        this, &MainWindow::showProfile);
 
-    // Подключаем сигналы от examSelectionWindow
-    connect(examSelectionWindow, &ExamSelectionWindow::examSelected, this, &MainWindow::showExamWindow);
-    connect(examSelectionWindow, &ExamSelectionWindow::backRequested,this, &MainWindow::showWelcome);
+    connect(profileWindow, &ProfileWindow::backRequested,           this, &MainWindow::showWelcome);
+    connect(profileWindow, &ProfileWindow::changePasswordRequested, this, &MainWindow::showChangePasswordWindow);
 
-    // Подключаем сигнал завершения экзамена от examWindow
-    // Предположим, examWindow генерирует сигнал:
-    //   examFinished(int examId, int score,
-    //                const QVector<ExamQuestion> &questions,
-    //                const QVector<int> &userAnswers)
-    connect(examWindow, &ExamWindow::examFinished,
-            this, &MainWindow::onExamFinished);
+    connect(changePasswordWindow, &ChangePasswordWindow::backRequested, this, &MainWindow::showProfile);
 
+    connect(examSelectionWindow, &ExamSelectionWindow::examSelected,  this, &MainWindow::showExamWindow);
+    connect(examSelectionWindow, &ExamSelectionWindow::backRequested, this, &MainWindow::showWelcome);
 
-    // Подключаем сигнал "выход в меню" из examCompletionWindow
-    connect(examCompletionWindow, &ExamCompletionWindow::exitToMenuRequested,
-            this, &MainWindow::showWelcome);
+    connect(examWindow, &ExamWindow::examFinished,                            this, &MainWindow::onExamFinished);
+    connect(examCompletionWindow, &ExamCompletionWindow::exitToMenuRequested, this, &MainWindow::showWelcome);
 
-    // Подключаем сигналы от statisticsWindow
     connect(statisticsWindow, &StatisticsWindow::backRequested, this, &MainWindow::showWelcome);
 
-    // Подключаем сигналы от клиента
     connect(client, &Client::examListReceived, this, [=](const QJsonArray &examList){
         examSelectionWindow->loadExamList(examList);
     });
@@ -96,7 +89,11 @@ MainWindow::MainWindow(QWidget *parent)
         statisticsWindow->setStatisticsData(stats);
     });
 
-    // Начальное окно — окно логина
+    connect(client, &Client::profileReceived, this, [=](const QJsonObject &profile){
+        profileWindow->loadProfile(profile);
+    });
+
+
     ui->stackedWidget->setCurrentWidget(loginWindow);
 }
 
@@ -105,7 +102,6 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-// --- Методы переключения окон ---
 
 void MainWindow::showLogin()
 {
@@ -127,9 +123,16 @@ void MainWindow::showWelcome()
     ui->stackedWidget->setCurrentWidget(welcomeWindow);
 }
 
+void MainWindow::showProfile()
+{
+    client->requestProfile();
+    ui->stackedWidget->setCurrentWidget(profileWindow);
+}
+
+
 void MainWindow::showExamSelection()
 {
-    client->requestExamList(); // Запрашиваем список экзаменов
+    client->requestExamList();
     ui->stackedWidget->setCurrentWidget(examSelectionWindow);
 }
 
@@ -156,12 +159,12 @@ void MainWindow::onExamFinished(int examId,
                                 const QVector<ExamQuestion> &questions,
                                 const QVector<QString> &userAnswers)
 {
-    // Сохранить результаты
     client->saveExamResults(examId, score, questions, userAnswers);
-
-    // Отобразить в examCompletionWindow
     examCompletionWindow->setResultData(score, questions, userAnswers);
-
-    // Переключиться на окно результатов
     ui->stackedWidget->setCurrentWidget(examCompletionWindow);
+}
+
+void MainWindow::showChangePasswordWindow()
+{
+    ui->stackedWidget->setCurrentWidget(changePasswordWindow);
 }

@@ -6,7 +6,6 @@ LoginWindow::LoginWindow(QWidget *parent) :
     ui(new Ui::LoginWindow)
 {
     ui->setupUi(this);
-    // Дополнительная инициализация при необходимости
 }
 
 LoginWindow::~LoginWindow()

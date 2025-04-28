@@ -16,17 +16,19 @@ public:
     explicit StatisticsWindow(QWidget *parent = nullptr);
     ~StatisticsWindow();
 
-    // Метод для передачи JSON-массива со статистикой
     void setStatisticsData(const QJsonArray &stats);
+    void applyFilters();
 
 signals:
-    void backRequested(); // кнопка "Назад"
+    void backRequested();
 
 private slots:
     void on_backButton_clicked();
+    void on_applyFilterButton_clicked();
 
 private:
+    QJsonArray originalStats;
     Ui::StatisticsWindow *ui;
 };
 
-#endif // STATISTICSWINDOW_H
+#endif

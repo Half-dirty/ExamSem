@@ -18,41 +18,77 @@ StatisticsWindow::~StatisticsWindow()
 
 void StatisticsWindow::setStatisticsData(const QJsonArray &stats)
 {
-    // Очищаем поле
+    originalStats = stats;
+
+    ui->subjectComboBox->clear();
+    ui->subjectComboBox->addItem("Все");
+
+    QSet<QString> subjects;
+
+    for (const QJsonValue &val : stats) {
+        QJsonObject obj = val.toObject();
+        QString examName = obj["exam_name"].toString();
+        subjects.insert(examName);
+    }
+
+    for (const QString &subject : subjects) {
+        ui->subjectComboBox->addItem(subject);
+    }
+
+    applyFilters();
+}
+
+
+
+void StatisticsWindow::on_backButton_clicked()
+{
+    emit backRequested();
+}
+
+void StatisticsWindow::applyFilters()
+{
     ui->statsTextEdit->clear();
 
-    // Формируем человекочитаемый текст
+    QString selectedSubject = ui->subjectComboBox->currentText();
+    QDate fromDate = ui->dateFromEdit->date();
+    QDate toDate = ui->dateToEdit->date();
+
     QString resultText;
-    for (int i = 0; i < stats.size(); ++i) {
-        QJsonObject obj = stats.at(i).toObject();
-        int examId = obj["exam_id"].toInt();
+
+    for (const QJsonValue &val : originalStats) {
+        QJsonObject obj = val.toObject();
         QString examName = obj["exam_name"].toString();
         int score = obj["score"].toInt();
+        QString passedAtRaw = obj["passed_at"].toString();
+        QDateTime passedAt = QDateTime::fromString(passedAtRaw, Qt::ISODate).toLocalTime();
 
-        resultText += QString("Экзамен: %1 (ID=%2)\n").arg(examName).arg(examId);
-        resultText += QString("Результат: %1\n").arg(score);
 
-        // Выведем user_answers и correct_answers, если есть
-        QJsonArray userAns = obj["user_answers"].toArray();
-        QJsonArray correctAns = obj["correct_answers"].toArray();
-
-        resultText += "Ответы пользователя: [ ";
-        for (auto val : userAns) {
-            resultText += val.toString() + " ";
+        if (selectedSubject != "Все" && examName != selectedSubject) {
+            continue;
         }
-        resultText += "]\n";
 
-        resultText += "Правильные ответы: [ ";
-        for (auto val : correctAns) {
-            resultText += val.toString() + " ";
+        if (passedAt.date() < fromDate || passedAt.date() > toDate) {
+            continue;
         }
-        resultText += "]\n\n";
+
+        QString dateStr = passedAt.date().toString("dd.MM.yyyy");
+        QString timeStr = passedAt.time().toString("HH:mm");
+
+        resultText += QString("Экзамен: %1 | Баллы: %2 | Сдан: %3 в %4\n\n")
+                          .arg(examName)
+                          .arg(score)
+                          .arg(dateStr)
+                          .arg(timeStr);
+    }
+
+    if (resultText.isEmpty()) {
+        resultText = "Нет результатов по выбранным фильтрам.";
     }
 
     ui->statsTextEdit->setPlainText(resultText);
 }
 
-void StatisticsWindow::on_backButton_clicked()
+void StatisticsWindow::on_applyFilterButton_clicked()
 {
-    emit backRequested();
+    applyFilters();
 }
