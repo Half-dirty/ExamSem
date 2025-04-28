@@ -5,7 +5,6 @@
 #include <QSqlQuery>
 #include <QDebug>
 
-// Предварительное объявление класса DatabaseDestroyer
 class DatabaseDestroyer;
 
 class Database
@@ -26,7 +25,6 @@ private:
     static Database* p_instance;
     static DatabaseDestroyer destroyer;
 
-    // Дружественный класс для доступа к приватным членам
     friend class DatabaseDestroyer;
 };
 

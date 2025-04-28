@@ -1,20 +1,18 @@
 #include "functions.h"
 #include "database.h"
-#include "databasedestroyer.h"
 #include <QSqlQuery>
+#include <QSqlDriver>
 #include <QSqlError>
 #include <QCryptographicHash>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
 
-Functions::Functions(QTcpSocket *socket, int &currentUserId, QObject *parent)
-    : QObject(parent), mTcpSocket(socket), currentUserId(currentUserId)
-{
-}
+Functions::Functions(QTcpSocket *socket, QMap<QTcpSocket*, int> &userIds, QObject *parent)
+    : QObject(parent), mTcpSocket(socket), userIds(userIds)
+{}
 
-// 1. Аутентификация: сверяем логин/пароль с таблицей users
-bool Functions::loginUser(const QString &username, const QString &password)
+void Functions::loginUser(const QString &username, const QString &password)
 {
     QString passwordHash = QString(QCryptographicHash::hash(password.toUtf8(), QCryptographicHash::Sha256).toHex());
 
@@ -23,52 +21,52 @@ bool Functions::loginUser(const QString &username, const QString &password)
     query.bindValue(":username", username);
     query.bindValue(":password_hash", passwordHash);
 
-    if (query.exec() && query.next()) {
-        currentUserId = query.value("id").toInt();  // Устанавливаем реальный id из таблицы users
-        mTcpSocket->write("OK\r\n");  // Или другой ответ
-        return true;
+    if (query.exec()) {
+        if (query.next()) {
+            int id = query.value("id").toInt();
+            userIds[mTcpSocket] = id;
+            qDebug() << "[Login Success] user_id =" << id;
+            mTcpSocket->write("OK\r\n");
+        } else {
+            mTcpSocket->write("ERROR\r\n");
+        }
     } else {
         mTcpSocket->write("ERROR\r\n");
-        return false;
     }
 }
 
-// 2. Регистрация: вставляем нового пользователя в таблицу users
+
 void Functions::registerUser(const QString &username, const QString &password)
 {
     QString passwordHash = QString(QCryptographicHash::hash(password.toUtf8(), QCryptographicHash::Sha256).toHex());
 
     QSqlQuery query;
-    query.prepare("INSERT INTO users (username, password_hash) VALUES (:username, :password_hash)");
+    query.prepare("INSERT INTO users (username, password_hash) VALUES (:username, :password_hash) RETURNING id");
     query.bindValue(":username", username);
     query.bindValue(":password_hash", passwordHash);
 
-    if(query.exec()){
+    if (query.exec() && query.next()) {
+        int id = query.value("id").toInt();
+        userIds[mTcpSocket] = id;
         mTcpSocket->write("OK\r\n");
     } else {
         mTcpSocket->write("ERROR\r\n");
     }
 }
 
-// 3. Получение списка экзаменов из таблицы exams
 QJsonArray Functions::getExamListJSON()
 {
-    QSqlQuery query;
-    query.prepare("SELECT id, name FROM exams");
-
+    QSqlQuery query("SELECT id, name FROM exams");
     QJsonArray examList;
-    if(query.exec()){
-        while(query.next()){
-            QJsonObject exam;
-            exam["id"] = query.value("id").toInt();
-            exam["name"] = query.value("name").toString();
-            examList.append(exam);
-        }
+    while (query.next()) {
+        QJsonObject exam;
+        exam["id"] = query.value(0).toInt();
+        exam["name"] = query.value(1).toString();
+        examList.append(exam);
     }
     return examList;
 }
 
-// 4. Получение вопросов экзамена по examId из таблицы questions
 QJsonArray Functions::getExamQuestionsJSON(int examId)
 {
     QSqlQuery query;
@@ -80,7 +78,6 @@ QJsonArray Functions::getExamQuestionsJSON(int examId)
         while(query.next()){
             QJsonObject question;
             question["text"] = query.value("question_text").toString();
-            // Предполагается, что поля correct_answers и options хранятся как JSON-строки
             question["correct_answers"] = QJsonDocument::fromJson(query.value("correct_answers").toString().toUtf8()).array();
             question["options"] = QJsonDocument::fromJson(query.value("options").toString().toUtf8()).array();
             questions.append(question);
@@ -89,39 +86,43 @@ QJsonArray Functions::getExamQuestionsJSON(int examId)
     return questions;
 }
 
-// 5. Сохранение результатов экзамена и отправка корректных ответов клиенту
 void Functions::saveExamResults(int userId, int examId, int score, const QJsonArray &answers)
 {
+    QSqlDatabase::database().transaction(); // <<< начать транзакцию вручную
+
     QSqlQuery query;
-    query.prepare("INSERT INTO results (user_id, exam_id, score, details) VALUES (:user_id, :exam_id, :score, :details)");
+    query.prepare("INSERT INTO results (user_id, exam_id, score, details, passed_at) VALUES (:user_id, :exam_id, :score, :details, NOW())");
     query.bindValue(":user_id", userId);
     query.bindValue(":exam_id", examId);
     query.bindValue(":score", score);
 
-    // Формируем JSON-объект для столбца details
     QJsonObject details;
     details["user_answers"] = answers;
     QJsonArray correctAnswers = getCorrectAnswers(examId);
     details["correct_answers"] = correctAnswers;
 
     QJsonDocument doc(details);
-    QString jsonString = doc.toJson(QJsonDocument::Compact);
+    query.bindValue(":details", QString::fromUtf8(doc.toJson(QJsonDocument::Compact)));
 
-    query.bindValue(":details", jsonString);
+    QSqlDatabase db = QSqlDatabase::database();
 
-    if(query.exec()){
-        // При успешном сохранении отправляем клиенту JSON с корректными ответами
+    if (query.exec()) {
+
+        if (QSqlDatabase::database().commit()) {
+        }
         QJsonObject response;
         response["status"] = "OK";
         response["correct_answers"] = correctAnswers;
         QJsonDocument respDoc(response);
         mTcpSocket->write(respDoc.toJson(QJsonDocument::Compact));
     } else {
+        QSqlDatabase::database().rollback(); // Откат если ошибка
         mTcpSocket->write("ERROR\r\n");
     }
 }
 
-// Метод для получения правильных ответов для заданного экзамена
+
+
 QJsonArray Functions::getCorrectAnswers(int examId)
 {
     QSqlQuery query;
@@ -131,11 +132,9 @@ QJsonArray Functions::getCorrectAnswers(int examId)
     QJsonArray correctAnswers;
     if(query.exec()){
         while(query.next()){
-            QString jsonStr = query.value("correct_answers").toString();
-            QJsonDocument doc = QJsonDocument::fromJson(jsonStr.toUtf8());
+            QJsonDocument doc = QJsonDocument::fromJson(query.value(0).toString().toUtf8());
             if(doc.isArray()){
                 QJsonArray arr = doc.array();
-                // Предположим, для каждого вопроса нас интересует первый правильный ответ
                 if(!arr.isEmpty()){
                     correctAnswers.append(arr.at(0));
                 }
@@ -145,12 +144,16 @@ QJsonArray Functions::getCorrectAnswers(int examId)
     return correctAnswers;
 }
 
-// 6. Получение статистики для текущего пользователя
 void Functions::showStatistics()
 {
     QSqlQuery query;
-    query.prepare("SELECT r.exam_id, r.score, e.name, details FROM results r JOIN exams e ON r.exam_id = e.id WHERE r.user_id = :user_id");
-    query.bindValue(":user_id", currentUserId);
+    query.prepare(R"(
+        SELECT r.exam_id, e.name, r.score, r.details, r.passed_at
+        FROM results r
+        JOIN exams e ON r.exam_id = e.id
+        WHERE r.user_id = :user_id
+    )");
+    query.bindValue(":user_id", userIds[mTcpSocket]);
 
     QJsonArray stats;
     if (query.exec()) {
@@ -159,7 +162,16 @@ void Functions::showStatistics()
             stat["exam_id"] = query.value("exam_id").toInt();
             stat["exam_name"] = query.value("name").toString();
             stat["score"] = query.value("score").toInt();
-            // Здесь можно добавить обработку details, если нужно
+            stat["passed_at"] = query.value("passed_at").toString();
+
+            QString detailsJson = query.value("details").toString();
+            QJsonDocument detailsDoc = QJsonDocument::fromJson(detailsJson.toUtf8());
+            if (!detailsDoc.isNull() && detailsDoc.isObject()) {
+                QJsonObject detailsObj = detailsDoc.object();
+                stat["user_answers"] = detailsObj["user_answers"];
+                stat["correct_answers"] = detailsObj["correct_answers"];
+            }
+
             stats.append(stat);
         }
         QJsonDocument doc(stats);
@@ -169,3 +181,42 @@ void Functions::showStatistics()
     }
 }
 
+
+void Functions::changeUserPassword(int userId, const QString &oldPassword, const QString &newPassword)
+{
+    QSqlQuery query(QSqlDatabase::database());
+    query.prepare("SELECT password_hash FROM users WHERE id = :id");
+    if (!query.isActive()) {
+        qDebug() << "[SERVER DEBUG] Query not active after prepare!";
+    }
+
+    query.bindValue(":id", userId);
+
+    if (!query.exec()) {
+        qDebug() << "[SERVER DEBUG] Query execution failed:" << query.lastError().text();
+    }
+    else if (!query.next()) {query.prepare("SELECT password_hash FROM users WHERE id = :id");
+
+        //qDebug() << "[SERVER DEBUG] No user found with id:" << userId;
+    }
+    else {
+        QString currentHash = query.value("password_hash").toString();
+        QString oldHash = QString(QCryptographicHash::hash(oldPassword.toUtf8(), QCryptographicHash::Sha256).toHex());
+
+        if (currentHash == oldHash) {
+            QSqlQuery updateQuery;
+            QString newHash = QString(QCryptographicHash::hash(newPassword.toUtf8(), QCryptographicHash::Sha256).toHex());
+            updateQuery.prepare("UPDATE users SET password_hash = :password_hash WHERE id = :id");
+            updateQuery.bindValue(":password_hash", newHash);
+            updateQuery.bindValue(":id", userId);
+
+            if (updateQuery.exec()) {
+                mTcpSocket->write("OK\r\n");
+                return;
+            }
+        } else {
+            qDebug() << "[SERVER DEBUG] Пароли не совпадают!";
+        }
+    }
+    mTcpSocket->write("ERROR\r\n");
+}
