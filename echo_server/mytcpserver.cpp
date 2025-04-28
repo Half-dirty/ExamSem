@@ -154,7 +154,6 @@ void MyTcpServer::slotServerRead()
     }
 }
 
-
 void MyTcpServer::addClientSocket(QTcpSocket *socket)
 {
     activeSockets.append(socket);
