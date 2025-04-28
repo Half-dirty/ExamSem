@@ -14,4 +14,4 @@ private:
     Database* databasePointer;
 };
 
-#endif // DATABASEDESTROYER_H
+#endif

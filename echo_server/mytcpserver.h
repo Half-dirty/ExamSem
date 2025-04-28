@@ -1,3 +1,4 @@
+
 #ifndef MYTCPSERVER_H
 #define MYTCPSERVER_H
 
@@ -5,6 +6,7 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QSqlDatabase>
+#include <QMap>
 
 class MyTcpServer : public QObject
 {
@@ -12,7 +14,6 @@ class MyTcpServer : public QObject
 public:
     explicit MyTcpServer(QObject *parent = nullptr);
     ~MyTcpServer();
-    bool connectToDatabase();
 
 private slots:
     void slotNewConnection();
@@ -21,13 +22,8 @@ private slots:
 
 private:
     QTcpServer *mTcpServer;
-    QTcpSocket *mTcpSocket;
     QSqlDatabase db;
-    int currentUserId = -1;
+    QMap<QTcpSocket*, int> userIds;
 };
 
-#endif // MYTCPSERVER_H
-
-
-
-
+#endif

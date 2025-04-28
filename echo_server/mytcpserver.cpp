@@ -1,5 +1,6 @@
 #include "mytcpserver.h"
 #include "functions.h"
+#include "database.h"
 #include <QSqlError>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -7,14 +8,11 @@
 
 MyTcpServer::MyTcpServer(QObject *parent) : QObject(parent)
 {
+    Database::getInstance();
     mTcpServer = new QTcpServer(this);
     connect(mTcpServer, &QTcpServer::newConnection, this, &MyTcpServer::slotNewConnection);
-
-    // Слушаем на порту 33333
     mTcpServer->listen(QHostAddress::Any, 33333);
-
-    // Подключаемся к базе данных
-    connectToDatabase();
+    //connectToDatabase();
 }
 
 MyTcpServer::~MyTcpServer()
@@ -22,112 +20,141 @@ MyTcpServer::~MyTcpServer()
     mTcpServer->close();
 }
 
-bool MyTcpServer::connectToDatabase()
-{
-    db = QSqlDatabase::addDatabase("QPSQL");
-    db.setHostName("localhost");
-    db.setDatabaseName("exam_system");
-    db.setUserName("postgres");
-    db.setPassword("230405");
-    db.setPort(5432);
-
-    return db.open();
-}
 
 void MyTcpServer::slotNewConnection()
 {
-    mTcpSocket = mTcpServer->nextPendingConnection();
-    connect(mTcpSocket, &QTcpSocket::readyRead, this, &MyTcpServer::slotServerRead);
-    connect(mTcpSocket, &QTcpSocket::disconnected, this, &MyTcpServer::slotClientDisconnected);
+    QTcpSocket *socket = mTcpServer->nextPendingConnection();
+    connect(socket, &QTcpSocket::readyRead, this, &MyTcpServer::slotServerRead);
+    connect(socket, &QTcpSocket::disconnected, this, &MyTcpServer::slotClientDisconnected);
 }
+
 
 void MyTcpServer::slotClientDisconnected()
 {
-    mTcpSocket->close();
+    QTcpSocket *socket = qobject_cast<QTcpSocket*>(sender());
+    if (socket) {
+        userIds.remove(socket);
+        socket->deleteLater();
+    }
 }
 
 void MyTcpServer::slotServerRead()
 {
-    QByteArray data = mTcpSocket->readAll();
+    QTcpSocket *socket = qobject_cast<QTcpSocket*>(sender());
+    QByteArray data = socket->readAll();
     QString input = QString(data).trimmed();
 
-    // Создаем объект Functions для обработки запроса
-    Functions functions(mTcpSocket, currentUserId);
+    QString command = input.section(' ', 0, 0);
+    QString payload = input.section(' ', 1);
 
-    // Обрабатываем команды от клиента:
-    // 1. LOGIN username password
-    // 2. REGISTER username password
-    // 3. GET_EXAMS
-    // 4. GET_QUESTIONS examId
-    // 5. SAVE_RESULTS JSON_string
-    // 6. GET_STATISTICS
+    Functions functions(socket, userIds);
 
-    if (input.startsWith("LOGIN")) {
-        QStringList parts = input.split(" ");
-        if (parts.size() == 3) {
-            QString username = parts[1];
-            QString password = parts[2];
-            functions.loginUser(username, password);
+    if (command == "LOGIN") {
+        QStringList parts = payload.split(" ");
+        if (parts.size() == 2) {
+            functions.loginUser(parts[0], parts[1]);
         } else {
-            mTcpSocket->write("ERROR\r\n");
+            socket->write("ERROR\r\n");
         }
     }
-    else if (input.startsWith("REGISTER")) {
-        QStringList parts = input.split(" ");
-        if (parts.size() == 3) {
-            QString username = parts[1];
-            QString password = parts[2];
-            functions.registerUser(username, password);
+    else if (command == "REGISTER") {
+        QStringList parts = payload.split(" ");
+        if (parts.size() == 2) {
+            functions.registerUser(parts[0], parts[1]);
         } else {
-            mTcpSocket->write("ERROR\r\n");
+            socket->write("ERROR\r\n");
         }
     }
-    else if (input.startsWith("GET_EXAMS")) {
+    else if (command == "GET_EXAMS") {
         QJsonArray exams = functions.getExamListJSON();
         QJsonDocument doc(exams);
-        mTcpSocket->write(doc.toJson(QJsonDocument::Compact));
+        socket->write(doc.toJson(QJsonDocument::Compact));
     }
-    else if (input.startsWith("GET_QUESTIONS")) {
-        QStringList parts = input.split(" ");
-        if (parts.size() == 2) {
-            bool ok;
-            int examId = parts[1].toInt(&ok);
-            if (ok) {
-                QJsonArray questions = functions.getExamQuestionsJSON(examId);
-                QJsonDocument doc(questions);
-                mTcpSocket->write(doc.toJson(QJsonDocument::Compact));
-            } else {
-                mTcpSocket->write("ERROR\r\n");
-            }
+    else if (command == "GET_QUESTIONS") {
+        bool ok;
+        int examId = payload.toInt(&ok);
+        if (ok) {
+            QJsonArray questions = functions.getExamQuestionsJSON(examId);
+            QJsonDocument doc(questions);
+            socket->write(doc.toJson(QJsonDocument::Compact));
         } else {
-            mTcpSocket->write("ERROR\r\n");
+            socket->write("ERROR\r\n");
         }
     }
-    else if (input.startsWith("SAVE_RESULTS")) {
-        // Ожидается, что после команды будет пробел и JSON-строка:
-        // Пример: SAVE_RESULTS {"examId":3, "score":5, "answers":[1,2,3,0,...]}
-        int index = input.indexOf(" ");
-        if (index != -1) {
-            QString jsonPart = input.mid(index+1).trimmed();
-            QJsonParseError error;
-            QJsonDocument doc = QJsonDocument::fromJson(jsonPart.toUtf8(), &error);
-            if (error.error == QJsonParseError::NoError && doc.isObject()) {
-                QJsonObject obj = doc.object();
-                int examId = obj["examId"].toInt();
-                int score = obj["score"].toInt();
-                QJsonArray answers = obj["answers"].toArray();
-                functions.saveExamResults(currentUserId, examId, score, answers);
-            } else {
-                mTcpSocket->write("ERROR\r\n");
-            }
+    else if (command == "SAVE_RESULTS") {
+        QJsonParseError error;
+        QJsonDocument doc = QJsonDocument::fromJson(payload.toUtf8(), &error);
+        if (error.error == QJsonParseError::NoError && doc.isObject()) {
+            QJsonObject obj = doc.object();
+            int examId = obj["examId"].toInt();
+            int score = obj["score"].toInt();
+            QJsonArray answers = obj["answers"].toArray();
+            functions.saveExamResults(userIds[socket], examId, score, answers);
         } else {
-            mTcpSocket->write("ERROR\r\n");
+            socket->write("ERROR\r\n");
         }
     }
-    else if (input.startsWith("GET_STATISTICS")) {
+    else if (command == "GET_PROFILE") {
+        QSqlQuery query;
+        query.prepare("SELECT full_name, birth_date, email FROM users WHERE id = :id");
+        query.bindValue(":id", userIds[socket]);
+        if (query.exec() && query.next()) {
+            QJsonObject profile;
+            profile["full_name"] = query.value("full_name").toString();
+            profile["birth_date"] = query.value("birth_date").toString();
+            profile["email"] = query.value("email").toString();
+            QJsonDocument doc(profile);
+            socket->write(doc.toJson(QJsonDocument::Compact));
+        } else {
+            socket->write("ERROR\r\n");
+        }
+    }
+
+    else if (command == "UPDATE_PROFILE") {
+        QJsonParseError error;
+        QJsonDocument doc = QJsonDocument::fromJson(payload.toUtf8(), &error);
+        if (error.error == QJsonParseError::NoError && doc.isObject()) {
+            QJsonObject obj = doc.object();
+            QString fullName = obj["full_name"].toString();
+            QString birthDate = obj["birth_date"].toString();
+            QString email = obj["email"].toString();
+
+            QSqlQuery query;
+            query.prepare("UPDATE users SET full_name = :full_name, birth_date = :birth_date, email = :email WHERE id = :id");
+            query.bindValue(":full_name", fullName);
+            query.bindValue(":birth_date", birthDate.isEmpty() ? QVariant(QVariant::Date) : birthDate);
+            query.bindValue(":email", email);
+            query.bindValue(":id", userIds[socket]);
+
+            if (query.exec()) {
+                socket->write("OK\r\n");
+            } else {
+                socket->write("ERROR\r\n");
+            }
+        } else {
+            socket->write("ERROR\r\n");
+        }
+    }
+    else if (command == "CHANGE_PASSWORD") {
+        QJsonParseError error;
+        QJsonDocument doc = QJsonDocument::fromJson(payload.toUtf8(), &error);
+
+        if (error.error == QJsonParseError::NoError && doc.isObject()) {
+            QJsonObject obj = doc.object();
+            QString oldPassword = obj["old_password"].toString();
+            QString newPassword = obj["new_password"].toString();
+            functions.changeUserPassword(userIds[socket], oldPassword, newPassword);
+        } else {
+            socket->write("ERROR\r\n");
+        }
+    }
+
+
+
+    else if (command == "GET_STATISTICS") {
         functions.showStatistics();
     }
     else {
-        mTcpSocket->write("ERROR\r\n");
+        socket->write("ERROR\r\n");
     }
 }
