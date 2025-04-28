@@ -12,7 +12,6 @@ MyTcpServer::MyTcpServer(QObject *parent) : QObject(parent)
     mTcpServer = new QTcpServer(this);
     connect(mTcpServer, &QTcpServer::newConnection, this, &MyTcpServer::slotNewConnection);
     mTcpServer->listen(QHostAddress::Any, 33333);
-    //connectToDatabase();
 }
 
 MyTcpServer::~MyTcpServer()
@@ -20,20 +19,20 @@ MyTcpServer::~MyTcpServer()
     mTcpServer->close();
 }
 
-
 void MyTcpServer::slotNewConnection()
 {
     QTcpSocket *socket = mTcpServer->nextPendingConnection();
     connect(socket, &QTcpSocket::readyRead, this, &MyTcpServer::slotServerRead);
     connect(socket, &QTcpSocket::disconnected, this, &MyTcpServer::slotClientDisconnected);
+    addClientSocket(socket); // Добавляем сокет в вектор
 }
-
 
 void MyTcpServer::slotClientDisconnected()
 {
     QTcpSocket *socket = qobject_cast<QTcpSocket*>(sender());
     if (socket) {
         userIds.remove(socket);
+        removeClientSocket(socket); // Удаляем сокет из вектора
         socket->deleteLater();
     }
 }
@@ -109,7 +108,6 @@ void MyTcpServer::slotServerRead()
             socket->write("ERROR\r\n");
         }
     }
-
     else if (command == "UPDATE_PROFILE") {
         QJsonParseError error;
         QJsonDocument doc = QJsonDocument::fromJson(payload.toUtf8(), &error);
@@ -148,13 +146,21 @@ void MyTcpServer::slotServerRead()
             socket->write("ERROR\r\n");
         }
     }
-
-
-
     else if (command == "GET_STATISTICS") {
         functions.showStatistics();
     }
     else {
         socket->write("ERROR\r\n");
     }
+}
+
+
+void MyTcpServer::addClientSocket(QTcpSocket *socket)
+{
+    activeSockets.append(socket);
+}
+
+void MyTcpServer::removeClientSocket(QTcpSocket *socket)
+{
+    activeSockets.removeOne(socket);
 }

@@ -24,6 +24,10 @@ private:
     QTcpServer *mTcpServer;
     QSqlDatabase db;
     QMap<QTcpSocket*, int> userIds;
+    QVector<QTcpSocket*> activeSockets; // Хранение всех клиентов(вектор с ссылками на сокеты)
+
+    void addClientSocket(QTcpSocket *socket);
+    void removeClientSocket(QTcpSocket *socket);
 };
 
 #endif
